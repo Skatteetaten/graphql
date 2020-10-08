@@ -1,7 +1,3 @@
-package graphql
-
-import "strings"
-
 // Extension of error to provide a graphql structure without losing backwards compatibility
 // When returning an error of type Error, standard error handling will work, but the
 // underlying graphql error structure will be available.
@@ -16,6 +12,9 @@ import "strings"
 //     }
 //     // Another error occurred
 //   }
+package graphql
+
+import "strings"
 
 // Errors contains the errors that were returned by the GraphQL server.
 type Errors []Error
