@@ -39,11 +39,11 @@ type Error struct {
 	Locations []Location
 	// Path contains the key path of the response field which got the error.
 	Path []interface{}
-	// Extensions may contain additional fields set by the GraphQL service.
+	// Extensions may contain additional custom fields set by the GraphQL service.
 	Extensions map[string]interface{}
 }
 
-// A Location is a location in the GraphQL query that resulted in an error.
+// Location is a location in the GraphQL query that resulted in an error.
 type Location struct {
 	Line   int
 	Column int
