@@ -209,7 +209,7 @@ func (c *Client) runWithPostFields(ctx context.Context, req *Request, resp inter
 	c.logf("<< %s", buf.String())
 	if err := json.NewDecoder(&buf).Decode(&gr); err != nil {
 		if res.StatusCode != http.StatusOK {
-			return fmt.Errorf("graphql: server returned a non-200 status code: %v", res.StatusCode)
+			return fmt.Errorf("graphql server returned a non-200 status code: %v", res.StatusCode)
 		}
 		return errors.Wrap(err, "decoding response")
 	}
@@ -246,7 +246,6 @@ func ImmediatelyCloseReqBody() ClientOption {
 // ClientOption are functions that are passed into NewClient to
 // modify the behaviour of the Client.
 type ClientOption func(*Client)
-
 
 type graphResponse struct {
 	Data   interface{}

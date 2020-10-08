@@ -29,7 +29,7 @@ func (errors Errors) Error() string {
 	for i, e := range errors {
 		errs[i] = e.Message
 	}
-	return "graphql: " + strings.Join(errs, "; ")
+	return strings.Join(errs, "; ")
 }
 
 // An Error contains error information returned by the GraphQL server.
@@ -51,5 +51,5 @@ type Location struct {
 }
 
 func (e Error) Error() string {
-	return "graphql: " + e.Message
+	return e.Message
 }
