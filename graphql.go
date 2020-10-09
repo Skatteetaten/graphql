@@ -139,13 +139,12 @@ func (c *Client) runWithJSON(ctx context.Context, req *Request, resp interface{}
 	c.logf("<< %s", buf.String())
 	if err := json.NewDecoder(&buf).Decode(&gr); err != nil {
 		if res.StatusCode != http.StatusOK {
-			return fmt.Errorf("graphql: server returned a non-200 status code: %v", res.StatusCode)
+			return fmt.Errorf("graphql server returned a non-200 status code: %v", res.StatusCode)
 		}
 		return errors.Wrap(err, "decoding response")
 	}
 	if len(gr.Errors) > 0 {
-		// return first error
-		return gr.Errors[0]
+		return gr.Errors
 	}
 	return nil
 }
@@ -210,13 +209,12 @@ func (c *Client) runWithPostFields(ctx context.Context, req *Request, resp inter
 	c.logf("<< %s", buf.String())
 	if err := json.NewDecoder(&buf).Decode(&gr); err != nil {
 		if res.StatusCode != http.StatusOK {
-			return fmt.Errorf("graphql: server returned a non-200 status code: %v", res.StatusCode)
+			return fmt.Errorf("graphql server returned a non-200 status code: %v", res.StatusCode)
 		}
 		return errors.Wrap(err, "decoding response")
 	}
 	if len(gr.Errors) > 0 {
-		// return first error
-		return gr.Errors[0]
+		return gr.Errors
 	}
 	return nil
 }
@@ -249,17 +247,9 @@ func ImmediatelyCloseReqBody() ClientOption {
 // modify the behaviour of the Client.
 type ClientOption func(*Client)
 
-type graphErr struct {
-	Message string
-}
-
-func (e graphErr) Error() string {
-	return "graphql: " + e.Message
-}
-
 type graphResponse struct {
 	Data   interface{}
-	Errors []graphErr
+	Errors Errors
 }
 
 // Request is a GraphQL request.

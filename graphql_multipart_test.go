@@ -114,7 +114,7 @@ func TestDoErr(t *testing.T) {
 	var responseData map[string]interface{}
 	err := client.Run(ctx, &Request{q: "query {}"}, &responseData)
 	is.True(err != nil)
-	is.Equal(err.Error(), "graphql: Something went wrong")
+	is.Equal(err.Error(), "Something went wrong")
 }
 
 func TestDoServerErr(t *testing.T) {
@@ -137,7 +137,7 @@ func TestDoServerErr(t *testing.T) {
 	defer cancel()
 	var responseData map[string]interface{}
 	err := client.Run(ctx, &Request{q: "query {}"}, &responseData)
-	is.Equal(err.Error(), "graphql: server returned a non-200 status code: 500")
+	is.Equal(err.Error(), "graphql server returned a non-200 status code: 500")
 }
 
 func TestDoBadRequestErr(t *testing.T) {
@@ -164,7 +164,50 @@ func TestDoBadRequestErr(t *testing.T) {
 	defer cancel()
 	var responseData map[string]interface{}
 	err := client.Run(ctx, &Request{q: "query {}"}, &responseData)
-	is.Equal(err.Error(), "graphql: miscellaneous message as to why the the request was bad")
+	is.Equal(err.Error(), "miscellaneous message as to why the the request was bad")
+}
+
+func TestDoBadRequestErrDetails(t *testing.T) {
+	is := is.New(t)
+	var calls int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		is.Equal(r.Method, http.MethodPost)
+		query := r.FormValue("query")
+		is.Equal(query, `query {}`)
+		w.WriteHeader(http.StatusBadRequest)
+		io.WriteString(w, `{
+			"errors": [{
+				"message": "Name for character with ID 1002 could not be fetched.",
+				"locations": [ { "line": 6, "column": 7 } ],
+				"path": [ "hero", "heroFriends", 1, "name" ],
+				"extensions": {
+					"code": "CAN_NOT_FETCH_BY_ID",
+					"timestamp": "Fri Feb 9 14:33:09 UTC 2018"
+				}
+			}]
+		}`)
+	}))
+	defer srv.Close()
+
+	ctx := context.Background()
+	client := NewClient(srv.URL, UseMultipartForm())
+
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
+	var responseData map[string]interface{}
+	err := client.Run(ctx, &Request{q: "query {}"}, &responseData)
+	errs, ok := err.(Errors)
+	is.True(ok)
+	is.Equal(len(errs), 1)
+	e := errs[0]
+	is.Equal(e.Message, "Name for character with ID 1002 could not be fetched.")
+	is.Equal(e.Locations, []Location{{Line: 6, Column: 7}})
+	is.Equal(e.Path, []interface{}{"hero", "heroFriends", 1.0, "name"})
+	is.Equal(e.Extensions, map[string]interface{}{
+		"code":      "CAN_NOT_FETCH_BY_ID",
+		"timestamp": "Fri Feb 9 14:33:09 UTC 2018",
+	})
 }
 
 func TestDoNoResponse(t *testing.T) {
